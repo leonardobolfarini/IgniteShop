@@ -1,11 +1,12 @@
 import { stripe } from "@/src/lib/stripe";
 import { ImageContainer, ProductContainer, ProductDetails } from "@/src/styles/pages/product";
-import axios from "axios";
 import { GetStaticPaths, GetStaticProps } from "next";
 import Head from "next/head";
 import Image from "next/image";
 import { useState } from "react";
 import Stripe from "stripe";
+import { useShoppingCart } from "use-shopping-cart";
+import { CartEntry } from "use-shopping-cart/core";
 
 interface ProductProps {
   product: {
@@ -19,21 +20,20 @@ interface ProductProps {
 }
 
 export default function Product({ product }: ProductProps) {
-  const [isCreatingCheckoutSession, setCreatingCheckoutSession] = useState(false)
+  const [isAddingToCart, setAddingToCart] = useState(false)
 
-  async function handleBuyProduct(){
+  const { addItem, cartDetails } = useShoppingCart()
+
+  async function handleAddProduct(){
     try {
-      setCreatingCheckoutSession(true)
-      const response = await axios.post('/api/checkout', {
-        priceId: product.productPriceId,
-      })
-
-      const { checkoutUrl } = response.data;
-
-      window.location.href = checkoutUrl
+      setAddingToCart(true)
+      addItem(
+        { currency: 'BRL', id: product.id, name: product.name, price: product.price / 100, price_id: product.productPriceId, image: product.imageUrl },
+        { count: 1 }
+      )
     } catch(error){
-      setCreatingCheckoutSession(false)
-      alert('Não foi possível redirecionar ao checkout')
+      setAddingToCart(false)
+      alert('Não foi possível adicionar ao carrinho')
     }
   }
   return (
@@ -57,8 +57,10 @@ export default function Product({ product }: ProductProps) {
 
           <p>{product.description}</p>
 
-          <button disabled={isCreatingCheckoutSession} onClick={handleBuyProduct}>
-            Comprar agora
+          <button disabled={isAddingToCart} 
+            onClick={handleAddProduct}
+          >
+            Adicionar ao carrinho
           </button>
         </ProductDetails>
       </ProductContainer> 
