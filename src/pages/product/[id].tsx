@@ -24,6 +24,19 @@ export default function Product({ product }: ProductProps) {
 
   const { addItem, cartDetails } = useShoppingCart()
 
+  if (!cartDetails){
+    return <h1></h1>
+  }
+
+  const formattedData = Object.entries(cartDetails).map(([key, value]: [string, CartEntry]) => {
+    return{
+      productID: key,
+      ...value,
+    }
+  })
+
+  const isItemAlreadyInCart = formattedData.some((item) => item.productID === product.id)
+
   async function handleAddProduct(){
     try {
       setAddingToCart(true)
@@ -57,7 +70,8 @@ export default function Product({ product }: ProductProps) {
 
           <p>{product.description}</p>
 
-          <button disabled={isAddingToCart} 
+          <button 
+            disabled={isItemAlreadyInCart} 
             onClick={handleAddProduct}
           >
             Adicionar ao carrinho

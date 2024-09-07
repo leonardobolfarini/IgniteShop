@@ -4,10 +4,10 @@ import { X } from '@phosphor-icons/react/dist/ssr';
 import Image from 'next/image';
 import { useShoppingCart } from 'use-shopping-cart';
 import { CartEntry } from 'use-shopping-cart/core';
-import { useState } from 'react';
+import axios from 'axios';
 
 export function CartModal(){
-  const { cartDetails, removeItem, redirectToCheckout, cartCount } = useShoppingCart()
+  const { cartDetails, removeItem, cartCount, totalPrice } = useShoppingCart()
   if (!cartDetails) {
     return <h1>Sem produtos.</h1>
   }
@@ -28,12 +28,14 @@ export function CartModal(){
   }
   async function handleRedirectCheckout(){
     try{
-      const result = await redirectToCheckout()
-      if (result?.error){
-        console.error(result)
-      }
-    }catch (error){
-      console.error(error)
+      const response = await axios.post('/api/checkout', {
+        items: formattedData
+      })
+
+      const checkoutUrl = response.data.checkoutUrl
+      window.location.href = checkoutUrl
+    } catch (error){
+      console.log(error)
     }
   }
 
@@ -69,7 +71,14 @@ export function CartModal(){
         })}
         <CheckoutInfos>
           <h1>Quantidade <span>{cartCount} item(s)</span></h1>
-          <h2>Valor total <span>R$ 270,00</span></h2>
+          <h2>Valor total <span>
+            {(totalPrice)?.toLocaleString('BRL',
+              {
+                style: 'currency',
+                currency: 'BRL'
+              }
+            )}
+          </span></h2>
           <button 
             type='submit'
             onClick={handleRedirectCheckout}
